@@ -1,0 +1,11 @@
+[project]
+name = "secured-media-server"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi[unicorn,uvicorn]>=0.123.10",
+    "uv>=0.9.15",
+    "uvicorn[standard]>=0.38.0",
+]
