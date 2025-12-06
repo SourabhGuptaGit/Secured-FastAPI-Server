@@ -1,2 +1,5 @@
-fastapi
+fastapi[standard]
 uvicorn[standard]
+asyncpg
+pydantic-settings
+sqlmodel
