@@ -20,6 +20,7 @@ class UserModel(BaseModel):
     first_name: str
     last_name: str
     is_verified: bool
+    password_hash: str = Field(exclude=True)
     created_at: datetime
     updated_at: datetime
 
