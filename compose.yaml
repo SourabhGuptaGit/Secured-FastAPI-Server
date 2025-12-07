@@ -15,11 +15,12 @@ services:
       watch:
         - action: rebuild
           path: ./requirements.txt
+        - action: rebuild
+          path: ./Dockerfile
+        - action: restart
+          path: ./src
           ignore:
             - ./*__pycache__*
-        - action: sync+restart
-          path: ./src
-          target: /app/src
   
   db:
     image: postgres:15
