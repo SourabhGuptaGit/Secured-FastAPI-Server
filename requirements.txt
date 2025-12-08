@@ -5,3 +5,4 @@ pydantic-settings
 sqlmodel
 alembic
 passlib
+pyjwt
