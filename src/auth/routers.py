@@ -8,12 +8,16 @@ from src.auth.schemas import UserLoginModel, UserModel, UserCreateModel
 from src.auth.services import UserService
 from src.db.db_agent import get_session
 from src.auth.utils import verify_password, create_access_token, decode_token
+from src.auth.dependencies import AccessTokenBearer, RefreshTokenBearer
 
 
 auth_router = APIRouter()
 
 def get_user_service():
     return UserService()
+
+access_token_bearer = AccessTokenBearer()
+refresh_token_bearer = RefreshTokenBearer()
 
 
 @auth_router.get("/users", response_model=List[UserModel], status_code=status.HTTP_200_OK)
@@ -81,5 +85,24 @@ async def create_user_session(
                 "email": email,
                 "uid": str(existing_user_data.uid)
             }
+        }
+    )
+    
+# {'email': 'sourabh.admin@test.com', 'user_uid': 'b93d2588-6704-4ed4-9b63-d14edfa136cc'}, \
+# 'exp': 1765493412, 'jti': '945e372b-00d8-4e34-82d6-f6b2d6f228e1', 'refresh': True}
+@auth_router.get("/refresh_access_token")
+async def refresh_access_token(refresh_user_details: RefreshTokenBearer = Depends(RefreshTokenBearer())):
+    print(f"{refresh_user_details = }")
+    parsed_token = await decode_token(refresh_user_details.credentials)
+    print(f"{parsed_token = }")
+    user_details = parsed_token.get("user")
+    access_token = create_access_token(user_details)
+    refresh_token = create_access_token(user_details, refresh=True)
+    return JSONResponse(
+        content={
+            "message": "Tokens Refreshed !!",
+            "access_token": access_token,
+            "refresh_token": refresh_token,
+            "user": user_details
         }
     )

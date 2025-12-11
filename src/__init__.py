@@ -22,7 +22,7 @@ app = FastAPI(
     lifespan=life_span
 )
 app.include_router(router=book_route, prefix=f"/api/{version}/books", tags=["books"])
-app.include_router(router=auth_router, prefix=f"/{version}/auth", tags=["auth"])
+app.include_router(router=auth_router, prefix=f"/api/{version}/auth", tags=["auth"])
 
 
 @app.get("/")

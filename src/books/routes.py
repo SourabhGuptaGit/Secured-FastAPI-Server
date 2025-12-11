@@ -7,6 +7,7 @@ from src.books.books_data import books
 from src.books.services import BookService
 from src.books.schemas import BooksCreateModel, BooksModel, BooksUpdateModel
 from src.db.db_agent import get_session
+from src.auth.dependencies import AccessTokenBearer
 
 
 book_route = APIRouter()
@@ -14,10 +15,15 @@ book_route = APIRouter()
 def get_book_service():
     return BookService()
 
+
+access_token = AccessTokenBearer()
+
+
 @book_route.get("/", response_model=List[BooksModel])
 async def get_all_books(
     session: AsyncSession = Depends(get_session),
-    book_service: BookService = Depends(get_book_service)
+    book_service: BookService = Depends(get_book_service),
+    access_user_details: AccessTokenBearer = Depends(access_token)
 ):
     data = await book_service.get_all_books(session=session)
     return data
