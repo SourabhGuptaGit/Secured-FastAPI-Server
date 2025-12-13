@@ -13,15 +13,22 @@ class BookService:
         books_data = result.all()
         return books_data if books_data else []
     
+    async def get_all_books_for_user(self, user_uid, session: AsyncSession):
+        statement = select(Books).where(Books.user_uid == user_uid).order_by(desc(Books.created_at))
+        result = await session.exec(statement)
+        books_data = result.all()
+        return books_data if books_data else []
+    
     async def get_book(self, book_id: str, session: AsyncSession):
         statement = select(Books).where(Books.uid == book_id)
         result = await session.exec(statement)
         book_data = result.first()
         return book_data if book_data else None
     
-    async def create_book(self, book_data: BooksCreateModel, session: AsyncSession):
+    async def create_book(self, book_data: BooksCreateModel, user_uid, session: AsyncSession):
         book_data_dict = book_data.model_dump()
         new_book_data = Books(**book_data_dict)
+        new_book_data.user_uid = user_uid
         try:
             new_book_data.published_date = datetime.strptime(book_data_dict.get("published_date"), "%Y-%m-%d").date()
         except ValueError:

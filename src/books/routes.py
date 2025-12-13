@@ -7,33 +7,49 @@ from src.books.books_data import books
 from src.books.services import BookService
 from src.books.schemas import BooksCreateModel, BooksModel, BooksUpdateModel
 from src.db.db_agent import get_session
-from src.auth.dependencies import AccessTokenBearer
+from src.auth.dependencies import AccessTokenBearer, RoleChecker
+from src.auth.models import ROLES
 
 
 book_route = APIRouter()
+role_checker = Depends(
+    RoleChecker([ROLES.USER.value, ROLES.ADMIN.value])
+)
 
 def get_book_service():
     return BookService()
 
 
-access_token = AccessTokenBearer()
+access_token_bearer = AccessTokenBearer()
 
 
-@book_route.get("/", response_model=List[BooksModel])
+@book_route.get("/", response_model=List[BooksModel], dependencies=[role_checker])
 async def get_all_books(
     session: AsyncSession = Depends(get_session),
     book_service: BookService = Depends(get_book_service),
-    access_user_details: AccessTokenBearer = Depends(access_token)
+    access_user_details: dict = Depends(access_token_bearer)
 ):
     data = await book_service.get_all_books(session=session)
     return data
 
 
-@book_route.get("/{id}", response_model=BooksModel, status_code=status.HTTP_200_OK)
+@book_route.get("/user/{user_uid}", response_model=List[BooksModel], dependencies=[role_checker])
+async def get_books_for_user(
+    user_uid: str,
+    session: AsyncSession = Depends(get_session),
+    book_service: BookService = Depends(get_book_service),
+    access_user_details: dict = Depends(access_token_bearer)
+):
+    data = await book_service.get_all_books_for_user(user_uid=user_uid, session=session)
+    return data
+
+
+@book_route.get("/{id}", response_model=BooksModel, dependencies=[role_checker])
 async def get_book(
     book_id: UUID,
     session: AsyncSession = Depends(get_session),
-    book_service: BookService = Depends(get_book_service)
+    book_service: BookService = Depends(get_book_service),
+    access_user_details: dict = Depends(access_token_bearer)
 ):
     book_data = await book_service.get_book(book_id, session=session)
     
@@ -43,25 +59,29 @@ async def get_book(
         raise HTTPException(status_code=404, detail=f"Invalid ID - {id}")
 
 
-@book_route.post("/", response_model=BooksModel, status_code=status.HTTP_201_CREATED)
+@book_route.post("/", response_model=BooksModel, status_code=status.HTTP_201_CREATED, dependencies=[role_checker])
 async def create_book(
     book_data: BooksCreateModel,
     session: AsyncSession = Depends(get_session),
-    book_service: BookService = Depends(get_book_service)
-):
-    new_book_data = await book_service.create_book(book_data=book_data, session=session)
+    book_service: BookService = Depends(get_book_service),
+    access_user_details: dict = Depends(access_token_bearer)
+    ):
+    
+    user_uid = access_user_details.get("user").get("user_uid")
+    new_book_data = await book_service.create_book(book_data=book_data, user_uid=user_uid, session=session)
     if new_book_data:
         return new_book_data
     else:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Invalid data format.")
 
 
-@book_route.patch("/{id}", response_model=BooksModel, status_code=status.HTTP_200_OK)
+@book_route.patch("/{id}", response_model=BooksModel, status_code=status.HTTP_200_OK, dependencies=[role_checker])
 async def update_book(
     book_id: UUID,
     book_data: BooksUpdateModel,
     session: AsyncSession = Depends(get_session),
-    book_service: BookService = Depends(get_book_service)
+    book_service: BookService = Depends(get_book_service),
+    access_user_details: dict = Depends(access_token_bearer)
 ):
     updated_book_data = await book_service.update_book(
         book_id=book_id, book_data=book_data, session=session
@@ -72,67 +92,13 @@ async def update_book(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Invalid ID - {book_id}")
     
 
-@book_route.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
+@book_route.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT, dependencies=[role_checker])
 async def delete_book(
     book_id: UUID,
     session: AsyncSession = Depends(get_session),
-    book_service: BookService = Depends(get_book_service)
+    book_service: BookService = Depends(get_book_service),
+    access_user_details: dict = Depends(access_token_bearer)
 ):
     deleted_book_data = await book_service.delete_book(book_id=book_id, session=session)
     if not deleted_book_data:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Invalid ID - {book_id}")
-
-        
-
-# @book_route.get("/", response_model=List[BooksModel])
-# async def get_all_books(session: AsyncSession = Depends(get_session)):
-#     data = [BooksModel(**book) for book in books]
-#     return data
-
-
-# @book_route.get("/{id}")
-# async def get_book(id: int, session: AsyncSession = Depends(get_session)):
-#     for book in books:
-#         book_obj = BooksModel(**book)
-#         if book_obj.id == id:
-#             return book_obj
-#     return HTTPException(status_code=404, detail=f"Invalid ID - {id}")
-
-
-# @book_route.post("/", status_code=status.HTTP_201_CREATED)
-# async def create_book(book: BooksModel, session: AsyncSession = Depends(get_session)):
-#     books.append(book.model_dump())
-#     return {"message": book}
-
-
-# @book_route.patch("/{id}", status_code=status.HTTP_200_OK)
-# async def update_book(id: int, new_book: BooksUpdateModel, session: AsyncSession = Depends(get_session)):
-#     new_book_raw = None
-#     for book in books:
-#         book_obj = BooksModel(**book)
-#         if book_obj.id == id:
-#             new_book_raw = new_book.model_dump()
-#             new_book_raw["id"] = id
-#             new_book_raw["published_date"] = book_obj.published_date
-#             new_book_raw = BooksModel(**new_book_raw)
-#             books.remove(book)
-#             books.append(new_book_raw.model_dump())
-#             break
-    
-#     if not new_book_raw:
-#         return HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Invalid ID - {id}")
-    
-#     return new_book_raw
-    
-
-# @book_route.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
-# async def delete_book(id: int, session: AsyncSession = Depends(get_session)):
-#     for book in books.copy():
-#         book_obj = BooksModel(**book)
-#         if book_obj.id == id:
-#             books.remove(book)
-#             return {}
-    
-#     return HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Invalid ID - {id}")
-        
-        

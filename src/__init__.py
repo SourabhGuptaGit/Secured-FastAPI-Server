@@ -18,8 +18,7 @@ version = "v1"
 app = FastAPI(
     title="Secure Media Server",
     summary="A FastAPI secured server to demo the backend functionality of a Social Media Application",
-    version=version,
-    lifespan=life_span
+    version=version
 )
 app.include_router(router=book_route, prefix=f"/api/{version}/books", tags=["books"])
 app.include_router(router=auth_router, prefix=f"/api/{version}/auth", tags=["auth"])

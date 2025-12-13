@@ -9,6 +9,7 @@ services:
       - "8080:8000"
     depends_on:
       - db
+      - redis
     networks:
       - app-network
     develop:
@@ -34,6 +35,16 @@ services:
       - db-data:/var/lib/postgresql/data
     networks:
       - app-network
+
+  redis:
+    image: redis:6
+    environment:
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PORT: ${REDIS_PORT}
+    ports:
+     - "6379:6379"
+    networks:
+     - app-network
 
 volumes:
   db-data:
