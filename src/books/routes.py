@@ -5,10 +5,10 @@ from uuid import UUID
 
 from src.books.books_data import books
 from src.books.services import BookService
-from src.books.schemas import BooksCreateModel, BooksModel, BooksUpdateModel
+from src.books.schemas import BooksCreateModel, BooksModel, BooksUpdateModel, BookDetailModel
 from src.db.db_agent import get_session
 from src.auth.dependencies import AccessTokenBearer, RoleChecker
-from src.auth.models import ROLES
+from src.db.models import ROLES
 
 
 book_route = APIRouter()
@@ -44,7 +44,7 @@ async def get_books_for_user(
     return data
 
 
-@book_route.get("/{id}", response_model=BooksModel, dependencies=[role_checker])
+@book_route.get("/{book_id}", response_model=BookDetailModel, dependencies=[role_checker])
 async def get_book(
     book_id: UUID,
     session: AsyncSession = Depends(get_session),
@@ -52,11 +52,10 @@ async def get_book(
     access_user_details: dict = Depends(access_token_bearer)
 ):
     book_data = await book_service.get_book(book_id, session=session)
-    
-    if book_data:
-        return book_data
-    else:
+    if not book_data:
         raise HTTPException(status_code=404, detail=f"Invalid ID - {id}")
+    
+    return book_data
 
 
 @book_route.post("/", response_model=BooksModel, status_code=status.HTTP_201_CREATED, dependencies=[role_checker])

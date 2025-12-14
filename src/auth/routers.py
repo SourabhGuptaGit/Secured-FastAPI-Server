@@ -10,7 +10,7 @@ from src.db.db_agent import get_session
 from src.auth.utils import verify_password, create_access_token
 from src.auth.dependencies import AccessTokenBearer, RefreshTokenBearer, get_current_auth_user, RoleChecker
 from src.db.redis import add_token_to_blocklist
-from src.auth.models import User, ROLES
+from src.db.models import User, ROLES
 
 
 auth_router = APIRouter()

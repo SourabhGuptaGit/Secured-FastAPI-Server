@@ -8,7 +8,8 @@ from src.auth.utils import decode_token
 from src.db.redis import get_token_in_blocklist
 from src.auth.services import UserService
 from src.db.db_agent import get_session
-from src.auth.models import User
+# from src.auth.models import User
+from src.db.models import User
 
 
 def get_user_service():

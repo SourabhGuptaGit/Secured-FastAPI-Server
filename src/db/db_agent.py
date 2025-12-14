@@ -15,11 +15,11 @@ async_engine = AsyncEngine(
 
 async def init_db():
     async with async_engine.begin() as conn:
-        from src.books.models import Books
+        from src.db.models import Books
         await conn.run_sync(SQLModel.metadata.create_all)
         
         
-async def get_session() -> AsyncSession:
+async def get_session() -> AsyncSession: # pyright: ignore[reportInvalidTypeForm]
     
     Session = sessionmaker(
         bind=async_engine,

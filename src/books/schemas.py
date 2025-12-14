@@ -1,7 +1,9 @@
 from pydantic import BaseModel, ConfigDict
 from uuid import UUID
-from typing import Optional
+from typing import Optional, List
 from datetime import datetime, date
+
+from src.reviews.schemas import ReviewModel
 
 
 class BooksModel(BaseModel):
@@ -15,6 +17,10 @@ class BooksModel(BaseModel):
     created_at: datetime
     updated_at: datetime
     model_config = ConfigDict(from_attributes=True)
+    
+
+class BookDetailModel(BooksModel):
+    reviews: List[ReviewModel]
     
 
 class BooksCreateModel(BaseModel):

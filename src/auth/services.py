@@ -3,7 +3,7 @@ from sqlmodel import select, desc
 from typing import List
 
 from src.auth.utils import get_password_hash, verify_password
-from src.auth.models import User, ROLES
+from src.db.models import User, ROLES
 from src.auth.schemas import UserCreateModel
 
 
