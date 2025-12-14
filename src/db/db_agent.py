@@ -8,8 +8,7 @@ from src.utils.config import settings
 
 async_engine = AsyncEngine(
     create_engine(
-        url=settings.DATABASE_URL,
-        echo=True
+        url=settings.DATABASE_URL
     )
 )
 
